@@ -1,4 +1,4 @@
-// src/admin/pages/CouponsPage.js
+
 import React from "react";
 
 const CouponsPage = () => {

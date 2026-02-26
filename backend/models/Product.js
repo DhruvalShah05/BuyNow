@@ -10,7 +10,12 @@ const productSchema = new mongoose.Schema(
     image: { type: String, required: true },
     images: [String],
 
-    category: { type: String, required: true },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+
     tags: [String],
 
     price: { type: Number, required: true },
@@ -21,7 +26,7 @@ const productSchema = new mongoose.Schema(
     stock: { type: Number, default: 0 },
     sold: { type: Number, default: 0 },
 
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

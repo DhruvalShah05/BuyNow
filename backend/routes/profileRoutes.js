@@ -11,10 +11,10 @@ import { verifyUser } from "../middleware/authMiddleware.js";
 const router = express.Router();
 router.use(verifyUser);
 
-router.get("/", getProfile); // Get user profile
-router.put("/", updateProfile); // Update user profile
-router.get("/addresses", getAddresses); // Get all addresses
-router.post("/addresses", addAddress); // Add new address
-router.put("/addresses/:id/default", setDefaultAddress); // Set default address
+router.get("/", getProfile); 
+router.put("/", updateProfile); 
+router.get("/addresses", getAddresses); 
+router.post("/addresses", addAddress); 
+router.put("/addresses/:id/default", setDefaultAddress); 
 
 export default router;

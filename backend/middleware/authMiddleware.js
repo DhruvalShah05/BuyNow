@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 
-// 🔐 Required Login
+
 export const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -22,7 +22,6 @@ export const protect = async (req, res, next) => {
 };
 
 
-// 🔓 Optional Login
 export const protectOptional = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -34,6 +33,6 @@ export const protectOptional = async (req, res, next) => {
 
     next();
   } catch (error) {
-    next(); // continue even if token invalid
+    next(); 
   }
 };

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { toast } from "react-toastify";
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -17,7 +18,9 @@ const AddProduct = () => {
 
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
 
+  // Handle text change
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -25,67 +28,169 @@ const AddProduct = () => {
     });
   };
 
+  // Handle image selection
   const handleImage = (e) => {
     const file = e.target.files[0];
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
+
+    if (file) {
+      setImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const data = new FormData();
-    Object.keys(formData).forEach(key => {
-      data.append(key, formData[key]);
-    });
+    if (!image) {
+      toast.error("Please select an image");
+      return;
+    }
 
-    if (image) data.append("image", image);
+    try {
+      setLoading(true);
 
-    await api.post("/products", data, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+      const data = new FormData();
 
-    navigate("/admin/products");
+      data.append("title", formData.title);
+      data.append("description", formData.description);
+      data.append("price", Number(formData.price));
+      data.append("oldPrice", Number(formData.oldPrice));
+      data.append("stock", Number(formData.stock));
+      data.append("category", formData.category);
+
+      // Convert tags string -> array
+      const tagsArray = formData.tags
+        .split(",")
+        .map(tag => tag.trim())
+        .filter(tag => tag !== "");
+
+      tagsArray.forEach(tag => data.append("tags", tag));
+
+      data.append("image", image);
+
+      await api.post("/products", data, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      toast.success("Product added successfully 🚀");
+      navigate("/admin/products");
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add product");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm w-full max-w-3xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-6">Add Product</h2>
+    <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-3xl mx-auto">
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-2xl font-semibold mb-6">Add New Product</h2>
 
-        {Object.keys(formData).map((field) => (
-          field !== "description" ? (
-            <input
-              key={field}
-              name={field}
-              type="text"
-              placeholder={field}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-black outline-none"
-              required={field !== "oldPrice" && field !== "tags"}
-            />
-          ) : (
-            <textarea
-              key={field}
-              name={field}
-              placeholder="Description"
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-black outline-none"
-              required
-            />
-          )
-        ))}
+      <form onSubmit={handleSubmit} className="space-y-5">
 
+        {/* Title */}
+        <input
+          name="title"
+          placeholder="Product Title"
+          value={formData.title}
+          onChange={handleChange}
+          required
+          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-black outline-none"
+        />
+
+        {/* Description */}
+        <textarea
+          name="description"
+          placeholder="Product Description"
+          value={formData.description}
+          onChange={handleChange}
+          required
+          rows={4}
+          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-black outline-none"
+        />
+
+        {/* Price & Old Price */}
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            name="price"
+            type="number"
+            placeholder="Price"
+            value={formData.price}
+            onChange={handleChange}
+            required
+            className="border border-gray-300 rounded-lg p-3"
+          />
+
+          <input
+            name="oldPrice"
+            type="number"
+            placeholder="Old Price (Optional)"
+            value={formData.oldPrice}
+            onChange={handleChange}
+            className="border border-gray-300 rounded-lg p-3"
+          />
+        </div>
+
+        {/* Stock & Category */}
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            name="stock"
+            type="number"
+            placeholder="Stock"
+            value={formData.stock}
+            onChange={handleChange}
+            required
+            className="border border-gray-300 rounded-lg p-3"
+          />
+
+          <input
+            name="category"
+            placeholder="Category"
+            value={formData.category}
+            onChange={handleChange}
+            required
+            className="border border-gray-300 rounded-lg p-3"
+          />
+        </div>
+
+        {/* Tags */}
+        <input
+          name="tags"
+          placeholder="Tags (comma separated)"
+          value={formData.tags}
+          onChange={handleChange}
+          className="w-full border border-gray-300 rounded-lg p-3"
+        />
+
+        {/* Image Preview */}
         {preview && (
-          <img src={preview} alt="preview" className="h-40 rounded-lg" />
+          <img
+            src={preview}
+            alt="Preview"
+            className="h-40 w-full object-cover rounded-lg"
+          />
         )}
 
-        <input type="file" onChange={handleImage} required />
+        {/* Image Upload */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImage}
+          required
+        />
 
-        <button className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg transition">
-          Add Product
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
+        >
+          {loading ? "Uploading..." : "Add Product"}
         </button>
+
       </form>
     </div>
   );

@@ -6,14 +6,39 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [product, setProduct] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    oldPrice: "",
+    stock: "",
+    category: "",
+    tags: ""
+  });
+
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   useEffect(() => {
-    api.get(`/products/${id}`).then(res => {
-      setProduct(res.data);
-      setFormData(res.data);
-    });
+    const fetchProduct = async () => {
+      const res = await api.get(`/products/${id}`);
+
+      const product = res.data;
+
+      setFormData({
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        oldPrice: product.oldPrice || "",
+        stock: product.stock,
+        category: product.category,
+        tags: product.tags ? product.tags.join(", ") : ""
+      });
+
+      setPreview(product.image);
+    };
+
+    fetchProduct();
   }, [id]);
 
   const handleChange = (e) => {
@@ -25,92 +50,118 @@ const ProductDetail = () => {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-
-    setFormData({
-      ...formData,
-      imageFile: file,
-      imagePreview: URL.createObjectURL(file)
-    });
+    if (file) {
+      setImageFile(file);
+      setPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const data = new FormData();
+
     data.append("title", formData.title);
     data.append("description", formData.description);
-    data.append("price", formData.price);
-    data.append("stock", formData.stock);
+    data.append("price", Number(formData.price));
+    data.append("oldPrice", Number(formData.oldPrice));
+    data.append("stock", Number(formData.stock));
     data.append("category", formData.category);
+    data.append("tags", formData.tags); // backend will split
 
-    if (formData.imageFile) {
-      data.append("image", formData.imageFile);
+    if (imageFile) {
+      data.append("image", imageFile);
     }
 
-    await api.put(`/products/${id}`, data, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+    try {
+      await api.put(`/products/${id}`, data, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
 
-    alert("Product updated ✅");
-    navigate("/admin/products");
+      alert("Product updated successfully ✅");
+      navigate("/admin/products");
+    } catch (err) {
+      console.error(err);
+      alert("Update failed ❌");
+    }
   };
 
-  if (!product) return <p>Loading...</p>;
-
   return (
-    <div  className="bg-white p-4 sm:p-6 rounded-xl shadow-sm w-full max-w-3xl mx-auto">>
-      <h2 className="text-xl mb-4">Edit Product</h2>
+    <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-3xl mx-auto">
+
+      <h2 className="text-2xl font-semibold mb-6">Edit Product</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
 
         <input
           name="title"
-          value={formData.title || ""}
+          value={formData.title}
           onChange={handleChange}
-          className="w-full border p-2"
+          className="w-full border p-3 rounded"
         />
 
         <textarea
           name="description"
-          value={formData.description || ""}
+          value={formData.description}
           onChange={handleChange}
-          className="w-full border p-2"
+          className="w-full border p-3 rounded"
         />
 
         <input
           name="price"
           type="number"
-          value={formData.price || ""}
+          value={formData.price}
           onChange={handleChange}
-          className="w-full border p-2"
+          className="w-full border p-3 rounded"
+        />
+
+        <input
+          name="oldPrice"
+          type="number"
+          value={formData.oldPrice}
+          onChange={handleChange}
+          className="w-full border p-3 rounded"
         />
 
         <input
           name="stock"
           type="number"
-          value={formData.stock || ""}
+          value={formData.stock}
           onChange={handleChange}
-          className="w-full border p-2"
+          className="w-full border p-3 rounded"
         />
 
         <input
           name="category"
-          value={formData.category || ""}
+          value={formData.category}
           onChange={handleChange}
-          className="w-full border p-2"
+          className="w-full border p-3 rounded"
+        />
+
+        {/* TAGS FIELD */}
+        <input
+          name="tags"
+          value={formData.tags}
+          onChange={handleChange}
+          className="w-full border p-3 rounded"
+          placeholder="Comma separated tags"
         />
 
         <div>
-          <img
-            src={formData.imagePreview || product.image}
-            alt="preview"
-            className="h-40 mb-2"
-          />
-
+          {preview && (
+            <img
+              src={preview}
+              alt="preview"
+              className="h-40 mb-2 rounded object-cover"
+            />
+          )}
           <input type="file" onChange={handleImageChange} />
         </div>
 
-        <button type="submit" className="bg-black text-white px-4 py-2">
+        <button
+          type="submit"
+          className="bg-black text-white px-4 py-2 rounded-lg"
+        >
           Update Product
         </button>
 

@@ -4,26 +4,19 @@ import {
   getMyOrders,
   getAllOrders,
   updateOrderStatus,
+  cancelOrder,
 } from "../controllers/orderController.js";
-
 import { protect } from "../middleware/authMiddleware.js";
 import { adminOnly } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
-
-// ==============================
-// USER ROUTES
-// ==============================
 router.post("/", protect, createOrder);
 router.get("/my", protect, getMyOrders);
+router.put("/cancel/:id", protect, cancelOrder);
 
 
-// ==============================
-// ADMIN ROUTES
-// ==============================
 router.get("/", protect, adminOnly, getAllOrders);
 router.put("/:id", protect, adminOnly, updateOrderStatus);
-
 
 export default router;

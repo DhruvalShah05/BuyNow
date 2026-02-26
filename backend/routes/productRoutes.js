@@ -6,7 +6,8 @@ import {
   updateProduct,
   deleteProduct,
   getFlashProducts,
-  getBestSellingProducts
+  getBestSellingProducts,
+  getProductsByCategory
 } from "../controllers/productController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -18,12 +19,25 @@ const router = express.Router();
 router.get("/", getProducts);
 router.get("/flash", getFlashProducts);
 router.get("/best-selling", getBestSellingProducts);
+router.get("/category/:categoryId", getProductsByCategory);
 router.get("/:id", getSingleProduct);
 
 // 🔥 Support image upload
-router.post("/", protect, adminOnly, upload.single("image"), createProduct);
-router.put("/:id", protect, adminOnly, upload.single("image"), updateProduct);
+router.post(
+  "/",
+  protect,
+  adminOnly,
+  upload.single("image"),
+  createProduct
+);
 
+router.put(
+  "/:id",
+  protect,
+  adminOnly,
+  upload.single("image"),
+  updateProduct
+);
 router.delete("/:id", protect, adminOnly, deleteProduct);
 
 

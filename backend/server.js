@@ -1,5 +1,5 @@
-import express from "express";
 import dotenv from "dotenv";
+import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 
@@ -14,8 +14,11 @@ import adminRoutes from "./routes/adminRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import { configCloudinary } from "./config/cloudinary.js";
 
 dotenv.config();
+
+configCloudinary();  // 🔥 force config AFTER env loads
 connectDB();
 
 const app = express();
@@ -34,6 +37,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/contact", contactRoutes);
+
 
 app.listen(process.env.PORT, () =>
   console.log(`Server running on ${process.env.PORT}`)
