@@ -1,9 +1,9 @@
 import Contact from "../models/Contact.js";
 
 
-// ===============================
+
 // CREATE MESSAGE (Login Optional)
-// ===============================
+
 export const createContact = async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
@@ -30,9 +30,9 @@ export const createContact = async (req, res) => {
 };
 
 
-// ===============================
+ 
 // ADMIN - GET ALL MESSAGES
-// ===============================
+ 
 export const getContacts = async (req, res) => {
   try {
     const contacts = await Contact.find()
@@ -46,9 +46,9 @@ export const getContacts = async (req, res) => {
 };
 
 
-// ===============================
+ 
 // ADMIN - REPLY TO MESSAGE
-// ===============================
+ 
 export const replyToContact = async (req, res) => {
   try {
     const { reply } = req.body;
@@ -75,9 +75,9 @@ export const replyToContact = async (req, res) => {
 };
 
 
-// ===============================
+ 
 // USER - GET MY MESSAGES
-// ===============================
+ 
 export const getMyContacts = async (req, res) => {
   try {
     const contacts = await Contact.find({
@@ -91,9 +91,9 @@ export const getMyContacts = async (req, res) => {
 };
 
 
-// ===============================
+ 
 // ADMIN - DELETE MESSAGE
-// ===============================
+ 
 export const deleteContact = async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id);

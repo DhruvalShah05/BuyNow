@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { toast } from "react-toastify";
 
 const AddProduct = () => {
   const navigate = useNavigate();
+
+  const [categories, setCategories] = useState([]); // ✅ new state
 
   const [formData, setFormData] = useState({
     title: "",
@@ -20,6 +22,20 @@ const AddProduct = () => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await api.get("/categories");
+        setCategories(data);
+      } catch (error) {
+        toast.error("Failed to load categories");
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   // Handle text change
   const handleChange = (e) => {
     setFormData({
@@ -28,17 +44,14 @@ const AddProduct = () => {
     });
   };
 
-  // Handle image selection
   const handleImage = (e) => {
     const file = e.target.files[0];
-
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
     }
   };
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -57,9 +70,10 @@ const AddProduct = () => {
       data.append("price", Number(formData.price));
       data.append("oldPrice", Number(formData.oldPrice));
       data.append("stock", Number(formData.stock));
+
+      // ✅ Send category ID
       data.append("category", formData.category);
 
-      // Convert tags string -> array
       const tagsArray = formData.tags
         .split(",")
         .map(tag => tag.trim())
@@ -77,7 +91,6 @@ const AddProduct = () => {
       navigate("/admin/products");
 
     } catch (error) {
-      console.error(error);
       toast.error("Failed to add product");
     } finally {
       setLoading(false);
@@ -86,7 +99,6 @@ const AddProduct = () => {
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-md w-full max-w-3xl mx-auto">
-
       <h2 className="text-2xl font-semibold mb-6">Add New Product</h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -134,7 +146,7 @@ const AddProduct = () => {
           />
         </div>
 
-        {/* Stock & Category */}
+        {/* Stock & Category Dropdown */}
         <div className="grid grid-cols-2 gap-4">
           <input
             name="stock"
@@ -146,14 +158,21 @@ const AddProduct = () => {
             className="border border-gray-300 rounded-lg p-3"
           />
 
-          <input
+          {/* ✅ Category Dropdown */}
+          <select
             name="category"
-            placeholder="Category"
             value={formData.category}
             onChange={handleChange}
             required
-            className="border border-gray-300 rounded-lg p-3"
-          />
+            className="border border-gray-300 rounded-lg p-3 bg-white"
+          >
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Tags */}
@@ -182,7 +201,6 @@ const AddProduct = () => {
           required
         />
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}

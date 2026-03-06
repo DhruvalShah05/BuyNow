@@ -18,7 +18,7 @@ import { configCloudinary } from "./config/cloudinary.js";
 
 dotenv.config();
 
-configCloudinary();  // 🔥 force config AFTER env loads
+configCloudinary();  
 connectDB();
 
 const app = express();

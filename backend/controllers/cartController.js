@@ -2,7 +2,7 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import mongoose from "mongoose";
 
-// ✅ ADD TO CART
+//  ADD TO CART
 export const addToCart = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
@@ -44,7 +44,7 @@ export const addToCart = async (req, res) => {
 };
 
 
-// ✅ GET CART
+//  GET CART
 export const getCart = async (req, res) => {
   try {
     const cart = await Cart.findOne({ user: req.user._id })
@@ -57,7 +57,7 @@ export const getCart = async (req, res) => {
 };
 
 
-// ✅ REMOVE FROM CART
+//  REMOVE FROM CART
 export const removeFromCart = async (req, res) => {
   try {
     const { productId } = req.params;

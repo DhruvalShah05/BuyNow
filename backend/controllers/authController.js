@@ -6,16 +6,16 @@ export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1️⃣ Check duplicate email
+    //Check duplicate email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    // 2️⃣ Hash password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3️⃣ Create user
+    //  Create user
     const user = await User.create({
       name,
       email,

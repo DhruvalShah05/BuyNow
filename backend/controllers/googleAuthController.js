@@ -6,14 +6,14 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleAuth = async (req, res) => {
   try {
-    // ✅ ADD THIS
+   
     const { idToken } = req.body;
 
     if (!idToken) {
       return res.status(400).json({ message: "ID Token missing" });
     }
 
-    // ✅ Verify token with Google
+    
     const ticket = await client.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -23,7 +23,7 @@ export const googleAuth = async (req, res) => {
 
     const { email, name, picture, sub: googleId } = payload;
 
-    // ✅ Find or create user
+   
     let user = await User.findOne({ email });
 
     if (!user) {
@@ -36,7 +36,7 @@ export const googleAuth = async (req, res) => {
       });
     }
 
-    // ✅ Create JWT
+    
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,

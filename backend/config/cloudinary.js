@@ -8,7 +8,7 @@ export const configCloudinary = () => {
   } = process.env;
 
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
-    console.log("❌ Cloudinary ENV variables missing!");
+    console.log("Cloudinary ENV variables missing!");
     return;
   }
 
@@ -19,7 +19,7 @@ export const configCloudinary = () => {
     secure: true,
   });
 
-  console.log("✅ Cloudinary Configured Successfully");
+  console.log("Cloudinary Configured Successfully");
 };
 
 export default cloudinary;

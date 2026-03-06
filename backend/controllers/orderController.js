@@ -3,9 +3,8 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Address from "../models/Address.js";
 
-// ==============================
 // CREATE ORDER
-// ==============================
+
 export const createOrder = async (req, res) => {
   try {
     const { addressId, paymentMethod = "COD" } = req.body;
@@ -61,9 +60,9 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// ==============================
+
 // GET MY ORDERS
-// ==============================
+
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -76,9 +75,9 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-// ==============================
+
 // GET ALL ORDERS (ADMIN)
-// ==============================
+
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -92,9 +91,9 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-// ==============================
+
 // UPDATE ORDER STATUS (ADMIN)
-// ==============================
+
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -112,9 +111,9 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-// ==============================
+
 // CANCEL ORDER (USER)
-// ==============================
+
 export const cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate("items.product");

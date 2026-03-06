@@ -1,6 +1,6 @@
 import Blog from "../models/Blog.js";
 
-// ✅ Get All Blogs
+//  Get All Blogs
 export const getBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find()
@@ -13,7 +13,7 @@ export const getBlogs = async (req, res) => {
   }
 };
 
-// ✅ Get Single Blog
+//  Get Single Blog
 export const getSingleBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id)
@@ -28,7 +28,7 @@ export const getSingleBlog = async (req, res) => {
   }
 };
 
-// ✅ Create Blog (Admin)
+//  Create Blog (Admin)
 export const createBlog = async (req, res) => {
   try {
     const { title, content, image } = req.body;

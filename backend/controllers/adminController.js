@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
 
-// ✅ ADMIN DASHBOARD STATS
+// ADMIN DASHBOARD STATS
 export const getDashboardStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
