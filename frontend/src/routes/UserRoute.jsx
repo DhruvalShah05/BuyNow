@@ -18,12 +18,15 @@ import Checkout from "../pages/Checkout";
 import ProductsPage from "../pages/ProductsPage";
 import BlogPage from "../pages/Blog";
 import BlogDetails from "../pages/BlogDetails";
+import PrivacyPolicy from "../pages/PrivacyPolicy";
+import TermsOfUse from "../pages/TermsOfUse";
+import FAQ from "../pages/FAQ";
 
 function UserRoute() {
   return (
     <>
       <Navbar />
-
+      <div className="min-h-screen">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<Signin />} />
@@ -33,6 +36,10 @@ function UserRoute() {
         <Route path="/blog" element={<Blog />} />
         <Route path="/blogs" element={<BlogPage />} />
         <Route path="/blog/:id" element={<BlogDetails />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/faq" element={<FAQ />} />
+
 
 
         {/* User pages */}
@@ -47,7 +54,7 @@ function UserRoute() {
         
       </Routes>
 
-      
+      </div>
 
       <Footer />
     </>

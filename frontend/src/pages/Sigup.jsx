@@ -1,30 +1,74 @@
 import React, { useState } from "react";
-import { FaGoogle } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useGoogleLogin } from "@react-oauth/google";
-import { useDispatch } from "react-redux";
-import { loginSuccess } from "../redux/slices/authSlice";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import img from "../assets/signup.png";
 
 function Signup() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmError, setConfirmError] = useState("");
+
+  // Handle main inputs
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    if (name === "password") {
+      setPasswordStrength(checkPasswordStrength(value));
+
+      // Also re-validate confirm password
+      if (confirmPassword && value !== confirmPassword) {
+        setConfirmError("Passwords do not match");
+      } else {
+        setConfirmError("");
+      }
+    }
   };
 
-  // ================= NORMAL SIGNUP =================
+  // Handle confirm password input
+  const handleConfirmChange = (e) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+
+    if (value !== formData.password) {
+      setConfirmError("Passwords do not match");
+    } else {
+      setConfirmError("");
+    }
+  };
+
+  // Check password strength
+  const checkPasswordStrength = (password) => {
+    if (password.length < 6) return "Weak";
+    const hasUpper = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*]/.test(password);
+    if (hasUpper && hasNumber && hasSpecial) return "Strong";
+    if (hasUpper || hasNumber) return "Medium";
+    return "Weak";
+  };
+
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (formData.password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
     try {
       await axios.post("http://localhost:5000/api/auth/signup", formData);
@@ -35,44 +79,11 @@ function Signup() {
     }
   };
 
-  // ================= GOOGLE SIGNUP =================
- // ================= GOOGLE SIGNUP =================
-const googleSignup = useGoogleLogin({
-  flow: "implicit", // IMPORTANT
-  onSuccess: async (tokenResponse) => {
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/google",
-        {
-          idToken: tokenResponse.id_token, // ✅ FIXED
-        }
-      );
-
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      dispatch(loginSuccess(res.data.user));
-      toast.success("Google signup successful 🎉");
-
-      if (res.data.user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Google signup failed");
-    }
-  },
-  onError: () => toast.error("Google signup failed"),
-});
-
-
   return (
-    <div className="flex items-center justify-center bg-white px-4 py-4">
+    <div className="flex items-center justify-center bg-white px-4 py-4 min-h-screen">
       <div className="max-w-6xl w-full flex flex-col md:flex-row items-center gap-8 rounded-lg shadow-lg overflow-hidden">
-        
-        {/* Left image */}
+
+        {/* Left Image */}
         <div className="flex-1 flex justify-center bg-gray-100 p-4">
           <img
             src={img}
@@ -81,7 +92,7 @@ const googleSignup = useGoogleLogin({
           />
         </div>
 
-        {/* Right form */}
+        {/* Right Form */}
         <div className="flex-1 w-full p-6">
           <h2 className="text-2xl font-semibold mb-2">Create an account</h2>
           <p className="text-sm text-gray-600 mb-4">Enter your details below</p>
@@ -95,6 +106,7 @@ const googleSignup = useGoogleLogin({
               required
               className="w-full border border-gray-300 rounded px-3 py-2"
             />
+
             <input
               type="email"
               name="email"
@@ -103,31 +115,72 @@ const googleSignup = useGoogleLogin({
               required
               className="w-full border border-gray-300 rounded px-3 py-2"
             />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              onChange={handleChange}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
 
+            {/* Password Field */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded px-3 py-2 pr-10"
+              />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-black"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+
+            {/* Password Strength */}
+            {showPassword && formData.password && (
+              <p
+                className={`text-sm mt-1 ${
+                  passwordStrength === "Strong"
+                    ? "text-green-600"
+                    : passwordStrength === "Medium"
+                    ? "text-yellow-500"
+                    : "text-red-500"
+                }`}
+              >
+                {passwordStrength} Password
+              </p>
+            )}
+
+            {/* Confirm Password Field */}
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={handleConfirmChange}
+                required
+                className="w-full border border-gray-300 rounded px-3 py-2 pr-10"
+              />
+              <span
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600 hover:text-black"
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+
+            {/* Confirm password error */}
+            {confirmPassword && confirmError && (
+              <p className="text-sm text-red-500 mt-1">{confirmError}</p>
+            )}
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-red-600 text-white py-2 rounded"
+              disabled={confirmError !== ""}
+              className="w-full bg-red-600 text-white py-2 rounded disabled:opacity-50"
             >
               Create Account
             </button>
-
-            {/* GOOGLE SIGNUP BUTTON */}
-            {/* <button
-              type="button"
-              onClick={() => googleSignup()}
-              className="w-full border py-2 rounded flex items-center justify-center gap-2"
-            >
-              <FaGoogle className="text-red-600" />
-              Sign up with Google
-            </button> */}
           </form>
 
           <p className="text-sm text-gray-600 mt-3">
@@ -136,7 +189,8 @@ const googleSignup = useGoogleLogin({
               Log in
             </Link>
           </p>
-        </div> 
+        </div>
+
       </div>
     </div>
   );

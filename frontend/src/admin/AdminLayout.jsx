@@ -1,25 +1,32 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaBars } from "react-icons/fa";
 
 const AdminLayout = () => {
   const [open, setOpen] = useState(false);
 
-  return (
-    <div className="flex min-h-screen bg-gray-100">
+  // Prevent background scroll when sidebar open
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "auto";
+  }, [open]);
 
-      {/* Mobile Overlay */}
+  return (
+    <div className="min-h-screen bg-gray-100">
+
+      {/* Overlay (Mobile) */}
       {open && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
           onClick={() => setOpen(false)}
         />
       )}
 
+      {/* Sidebar */}
       <Sidebar open={open} setOpen={setOpen} />
 
-      <div className="flex-1 p-4 sm:p-6">
+      {/* Main Content */}
+      <div className="p-4 sm:p-6 lg:ml-64">
 
         {/* Mobile Top Bar */}
         <div className="lg:hidden mb-4">

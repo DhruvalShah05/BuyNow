@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ProductCard from "./ProductCard";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function FlashSales() {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,7 @@ export default function FlashSales() {
     minutes: 0,
     seconds: 0,
   });
+  const navigate = useNavigate();
 
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -171,7 +173,7 @@ export default function FlashSales() {
 
       {/* View All */}
       <div className="flex justify-center mt-8">
-        <button className="bg-red-600 text-white px-8 py-3 rounded hover:bg-red-700 transition">
+        <button onClick={() => navigate("/products")} className="bg-red-600 text-white px-8 py-3 rounded hover:bg-red-700 transition">
           View All Products
         </button>
       </div>

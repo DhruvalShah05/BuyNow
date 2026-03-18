@@ -4,7 +4,6 @@ import Product from "../models/Product.js";
 import Address from "../models/Address.js";
 
 // CREATE ORDER
-
 export const createOrder = async (req, res) => {
   try {
     const { addressId, paymentMethod = "COD" } = req.body;
@@ -12,10 +11,7 @@ export const createOrder = async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id }).populate(
       "items.product"
     );
-
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
-    }
+    if (!cart || cart.items.length === 0) return res.status(400).json({ message: "Cart is empty" });
 
     const address = await Address.findById(addressId);
     if (!address) return res.status(404).json({ message: "Address not found" });
@@ -33,19 +29,12 @@ export const createOrder = async (req, res) => {
         price: item.product.price,
       })),
       totalAmount,
-      shippingAddress: {
-        street: address.street,
-        city: address.city,
-        state: address.state,
-        pincode: address.pincode,
-        country: address.country,
-      },
+      shippingAddress: { ...address._doc },
       paymentMethod,
       paymentStatus: paymentMethod === "CARD" ? "Paid" : "Pending",
-      status: "Processing",
     });
 
-    // Update product stock
+    // Deduct stock
     for (let item of cart.items) {
       await Product.findByIdAndUpdate(item.product._id, {
         $inc: { stock: -item.quantity, sold: item.quantity },
@@ -60,9 +49,7 @@ export const createOrder = async (req, res) => {
   }
 };
 
-
-// GET MY ORDERS
-
+// GET USER ORDERS
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -75,9 +62,7 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-
 // GET ALL ORDERS (ADMIN)
-
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -91,29 +76,29 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-
 // UPDATE ORDER STATUS (ADMIN)
-
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // Prevent changing status of cancelled orders
+    if (order.status === "Cancelled") {
+      return res.status(400).json({ message: "Cannot update a cancelled order" });
+    }
 
     order.status = status;
     if (status === "Delivered") order.paymentStatus = "Paid";
 
     await order.save();
-    res.json({ message: "Order status updated successfully", order });
+    res.json({ message: "Order updated successfully", order });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-
 // CANCEL ORDER (USER)
-
 export const cancelOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate("items.product");
@@ -124,9 +109,7 @@ export const cancelOrder = async (req, res) => {
     }
 
     if (["Shipped", "Delivered"].includes(order.status)) {
-      return res.status(400).json({
-        message: `Cannot cancel an order that is ${order.status}`,
-      });
+      return res.status(400).json({ message: `Cannot cancel an order that is ${order.status}` });
     }
 
     order.status = "Cancelled";
@@ -134,7 +117,7 @@ export const cancelOrder = async (req, res) => {
 
     await order.save();
 
-    // Rollback stock
+    // Restore stock
     for (let item of order.items) {
       await Product.findByIdAndUpdate(item.product._id, {
         $inc: { stock: item.quantity, sold: -item.quantity },

@@ -17,6 +17,8 @@ function Profile() {
     country: "",
   });
 
+  const [newMessage, setNewMessage] = useState("");
+
   useEffect(() => {
     fetchAll();
   }, []);
@@ -37,33 +39,64 @@ function Profile() {
     }
   };
 
-  /* ============================
-     ✅ PROFILE PHOTO UPLOAD LOGIC
-  ============================= */
+  /* PROFILE PHOTO UPLOAD */
   const handleProfileUpload = async (file) => {
-  if (!file) return;
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+      const { data } = await api.put("/users/profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setUser(data);
+      alert("Profile photo updated successfully");
+    } catch (err) {
+      console.error(err);
+      alert("Profile photo update failed");
+    }
+  };
 
-  try {
-    const formData = new FormData();
-    formData.append("profileImage", file);
+  /* ADD ADDRESS */
+  const handleAddAddress = async () => {
+    try {
+      await api.post("/addresses", newAddress);
+      setNewAddress({ street: "", city: "", state: "", pincode: "", country: "" });
+      setShowAddressForm(false);
+      fetchAll();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    const { data } = await api.put(
-      "/users/profile",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data", // override JSON
-        },
-      }
-    );
+  /* SEND MESSAGE */
+  const handleSendMessage = async () => {
+    if (!newMessage) return;
+    try {
+      await api.post("/contact", {
+        name: user.name,
+        email: user.email,
+        phone: "",
+        message: newMessage,
+      });
+      setNewMessage("");
+      fetchAll();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    setUser(data);
-    alert("Profile photo updated successfully");
-  } catch (err) {
-    console.error(err);
-    alert("Profile photo update failed");
-  }
-};
+  /* CANCEL ORDER */
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    try {
+      await api.put(`/orders/cancel/${orderId}`);
+      fetchAll();
+      alert("Order cancelled successfully");
+    } catch (error) {
+      console.log(error);
+      alert("Failed to cancel order");
+    }
+  };
 
   if (!user) return <div className="p-10">Loading...</div>;
 
@@ -74,8 +107,6 @@ function Profile() {
         {/* SIDEBAR */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="text-center mb-6">
-
-            {/* Profile Image OR First Letter */}
             {user?.profileImage ? (
               <img
                 src={user.profileImage}
@@ -88,21 +119,14 @@ function Profile() {
               </div>
             )}
 
-            {/* Hidden File Input */}
             <input
               type="file"
               id="profileUpload"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  handleProfileUpload(file);
-                }
-              }}
+              onChange={(e) => handleProfileUpload(e.target.files[0])}
             />
 
-            {/* Change Photo Button */}
             <label
               htmlFor="profileUpload"
               className="block mt-3 text-sm text-red-500 cursor-pointer hover:underline"
@@ -110,44 +134,32 @@ function Profile() {
               Change Profile Photo
             </label>
 
-            <h3 className="mt-4 font-semibold text-lg">
-              {user?.name}
-            </h3>
-
-            <p className="text-sm text-gray-500">
-              {user?.email}
-            </p>
+            <h3 className="mt-4 font-semibold text-lg">{user?.name}</h3>
+            <p className="text-sm text-gray-500">{user?.email}</p>
           </div>
 
           <ul className="space-y-3">
             <li
               onClick={() => setActiveTab("profile")}
-              className={`cursor-pointer ${activeTab === "profile" ? "text-red-500 font-semibold" : ""
-                }`}
+              className={`cursor-pointer ${activeTab === "profile" ? "text-red-500 font-semibold" : ""}`}
             >
               My Profile
             </li>
-
             <li
               onClick={() => setActiveTab("address")}
-              className={`cursor-pointer ${activeTab === "address" ? "text-red-500 font-semibold" : ""
-                }`}
+              className={`cursor-pointer ${activeTab === "address" ? "text-red-500 font-semibold" : ""}`}
             >
               Address Book
             </li>
-
             <li
               onClick={() => setActiveTab("orders")}
-              className={`cursor-pointer ${activeTab === "orders" ? "text-red-500 font-semibold" : ""
-                }`}
+              className={`cursor-pointer ${activeTab === "orders" ? "text-red-500 font-semibold" : ""}`}
             >
               My Orders
             </li>
-
             <li
               onClick={() => setActiveTab("messages")}
-              className={`cursor-pointer ${activeTab === "messages" ? "text-red-500 font-semibold" : ""
-                }`}
+              className={`cursor-pointer ${activeTab === "messages" ? "text-red-500 font-semibold" : ""}`}
             >
               My Messages
             </li>
@@ -157,24 +169,14 @@ function Profile() {
         {/* MAIN CONTENT */}
         <div className="md:col-span-3 space-y-8">
 
-          {/* PROFILE SECTION */}
+          {/* PROFILE */}
           {activeTab === "profile" && (
             <div className="bg-white p-8 rounded-xl shadow-sm">
-              <h2 className="text-xl font-semibold mb-6">
-                Account Information
-              </h2>
-
+              <h2 className="text-xl font-semibold mb-6">Account Information</h2>
               <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  className="border p-3 rounded"
-                  defaultValue={user.name}
-                />
-                <input
-                  className="border p-3 rounded"
-                  defaultValue={user.email}
-                />
+                <input className="border p-3 rounded" defaultValue={user.name} />
+                <input className="border p-3 rounded" defaultValue={user.email} />
               </div>
-
               <div className="mt-6 text-sm text-gray-500">
                 <p><strong>Role:</strong> {user.role}</p>
                 <p><strong>Joined:</strong> {new Date(user.createdAt).toDateString()}</p>
@@ -182,12 +184,34 @@ function Profile() {
             </div>
           )}
 
-          {/* ADDRESS SECTION */}
+          {/* ADDRESS */}
           {activeTab === "address" && (
             <div className="bg-white p-8 rounded-xl shadow-sm">
-              <h2 className="text-xl font-semibold mb-6">
-                Address Book
-              </h2>
+              <h2 className="text-xl font-semibold mb-6">Address Book</h2>
+              <button
+                onClick={() => setShowAddressForm(!showAddressForm)}
+                className="bg-red-500 text-white px-4 py-2 rounded mb-6"
+              >
+                Add Address
+              </button>
+
+              {showAddressForm && (
+                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                  <input placeholder="Street" className="border p-3 rounded"
+                    value={newAddress.street} onChange={(e)=>setNewAddress({...newAddress,street:e.target.value})} />
+                  <input placeholder="City" className="border p-3 rounded"
+                    value={newAddress.city} onChange={(e)=>setNewAddress({...newAddress,city:e.target.value})} />
+                  <input placeholder="State" className="border p-3 rounded"
+                    value={newAddress.state} onChange={(e)=>setNewAddress({...newAddress,state:e.target.value})} />
+                  <input placeholder="Pincode" className="border p-3 rounded"
+                    value={newAddress.pincode} onChange={(e)=>setNewAddress({...newAddress,pincode:e.target.value})} />
+                  <input placeholder="Country" className="border p-3 rounded"
+                    value={newAddress.country} onChange={(e)=>setNewAddress({...newAddress,country:e.target.value})} />
+                  <button onClick={handleAddAddress} className="bg-green-500 text-white px-4 py-2 rounded">
+                    Save Address
+                  </button>
+                </div>
+              )}
 
               {addresses.map((addr) => (
                 <div key={addr._id} className="border p-4 rounded-lg mb-4">
@@ -199,136 +223,92 @@ function Profile() {
             </div>
           )}
 
-          {/* ORDERS SECTION */}
+          {/* ORDERS */}
           {activeTab === "orders" && (
             <div className="bg-white p-8 rounded-xl shadow-sm">
               <h2 className="text-xl font-semibold mb-6">My Orders</h2>
 
-              {!Array.isArray(orders) || orders.length === 0 ? (
-                <p className="text-gray-500">No orders found</p>
-              ) : (
-                orders.map((order, index) => (
-                  <div
-                    key={order?._id || index}
-                    className="border bg-gray-50 p-6 mb-6 rounded-lg hover:shadow-md transition"
-                  >
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="font-medium">
-                        Order ID: #{order?._id?.slice(-6) || "N/A"}
-                      </span>
+              {orders.length === 0 ? <p>No orders found</p> : (
+                <div className="space-y-6">
+                  {orders.map(order => (
+                    <div key={order._id} className="border p-4 rounded-lg">
+                      <div className="flex justify-between mb-4">
+                        <span className="font-semibold">Order ID: #{order._id.slice(-6)}</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          order.status === "Processing" ? "bg-blue-100 text-blue-600" :
+                          order.status === "Shipped" ? "bg-purple-100 text-purple-600" :
+                          order.status === "Delivered" ? "bg-green-100 text-green-600" :
+                          order.status === "Cancelled" ? "bg-red-100 text-red-600" :
+                          "bg-gray-100 text-gray-600"
+                        }`}>{order.status}</span>
+                      </div>
 
-                      <span
-                        className={`px-3 py-1 text-sm rounded-full font-medium ${order?.status === "Delivered"
-                            ? "bg-green-100 text-green-700"
-                            : order?.status === "Cancelled"
-                              ? "bg-red-100 text-red-700"
-                              : order?.status === "Shipped"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-yellow-100 text-yellow-700"
-                          }`}
-                      >
-                        {order?.status || "Processing"}
-                      </span>
-                    </div>
+                      <p><strong>Total:</strong> ₹{order.totalAmount}</p>
+                      <p><strong>Payment:</strong> {order.paymentStatus}</p>
 
-                    {/* Items */}
-                    {Array.isArray(order?.items) &&
-                      order.items.map((item, i) => (
-                        <div
-                          key={item?.product?._id || i}
-                          className="flex items-center justify-between border-b py-4"
+                      <div className="mt-3">
+                        <p className="font-semibold mb-1">Items:</p>
+                        {order.items.map(item => (
+                          <div key={item.product._id} className="flex justify-between text-sm mb-1">
+                            <span>{item.product.name} x {item.quantity}</span>
+                            <span>₹{item.price * item.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 text-sm">
+                        <p className="font-semibold mb-1">Shipping Address:</p>
+                        <p>{order.shippingAddress.street}, {order.shippingAddress.city}</p>
+                        <p>{order.shippingAddress.state} - {order.shippingAddress.pincode}</p>
+                        <p>{order.shippingAddress.country}</p>
+                      </div>
+
+                      {order.status === "Processing" && (
+                        <button
+                          onClick={() => handleCancelOrder(order._id)}
+                          className="mt-3 bg-red-500 text-white px-4 py-2 rounded"
                         >
-                          {/* Left Section (Clickable) */}
-                          <div
-                            onClick={() =>
-                              item?.product?._id &&
-                              navigate(`/product/${item.product._id}`)
-                            }
-                            className="flex items-center gap-4 cursor-pointer group"
-                          >
-                            <img
-                              src={
-                                item?.product?.image ||
-                                item?.product?.images?.[0] ||
-                                "https://via.placeholder.com/80"
-                              }
-                              alt={item?.product?.title || "Product"}
-                              className="w-20 h-20 object-cover rounded border group-hover:scale-105 transition"
-                            />
-
-                            <div>
-                              <h4 className="font-medium text-gray-800 group-hover:text-red-500 transition">
-                                {item?.product?.title || "Product removed"}
-                              </h4>
-
-                              <p className="text-sm text-gray-500">
-                                Price: ₹{item?.price?.toFixed(2) || "0.00"}
-                              </p>
-
-                              <p className="text-sm text-gray-500">
-                                Quantity: {item?.quantity || 0}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Subtotal */}
-                          <div className="font-semibold text-gray-800">
-                            ₹
-                            {(
-                              (item?.price || 0) *
-                              (item?.quantity || 0)
-                            ).toFixed(2)}
-                          </div>
-                        </div>
-                      ))}
-
-                    {/* Total */}
-                    <div className="flex justify-between mt-4 pt-4 border-t font-semibold text-lg">
-                      <span>Total</span>
-                      <span>
-                        ₹
-                        {order?.totalAmount
-                          ? order.totalAmount.toFixed(2)
-                          : "0.00"}
-                      </span>
+                          Cancel Order
+                        </button>
+                      )}
                     </div>
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
           )}
 
-          {/* MESSAGES SECTION */}
+          {/* MESSAGES */}
           {activeTab === "messages" && (
             <div className="bg-white p-8 rounded-xl shadow-sm">
-              <h2 className="text-xl font-semibold mb-6">
-                My Messages
-              </h2>
+              <h2 className="text-xl font-semibold mb-6">My Messages</h2>
+              <textarea
+                rows="4"
+                placeholder="Write your message..."
+                value={newMessage}
+                onChange={(e)=>setNewMessage(e.target.value)}
+                className="w-full border p-3 rounded"
+              />
+              <button onClick={handleSendMessage} className="mt-3 bg-red-500 text-white px-4 py-2 rounded">
+                Send Message
+              </button>
 
-              {messages.length === 0 ? (
-                <p>No messages yet</p>
-              ) : (
-                messages.map((msg) => (
-                  <div key={msg._id} className="border p-6 mb-6 rounded-lg">
+              {messages.length === 0 ? <p className="mt-4">No messages yet</p> :
+                messages.map((msg)=>(
+                  <div key={msg._id} className="border p-6 mt-6 rounded-lg">
                     <p className="font-medium mb-2">Your Message:</p>
                     <p className="mb-4">{msg.message}</p>
-
                     {msg.adminReply ? (
                       <div className="bg-green-50 p-4 rounded">
-                        <p className="text-green-700 font-medium">
-                          Admin Reply:
-                        </p>
+                        <p className="text-green-700 font-medium">Admin Reply:</p>
                         <p>{msg.adminReply}</p>
                       </div>
                     ) : (
-                      <span className="text-yellow-600 text-sm">
-                        Waiting for admin reply...
-                      </span>
+                      <span className="text-yellow-600 text-sm">Waiting for admin reply...</span>
                     )}
                   </div>
                 ))
-              )}
+              }
             </div>
           )}
 

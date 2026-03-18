@@ -13,8 +13,8 @@ const orderSchema = new mongoose.Schema(
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
         },
-        quantity: Number,
-        price: Number,
+        quantity: { type: Number, required: true },
+        price: { type: Number, required: true },
       },
     ],
     shippingAddress: {
@@ -34,7 +34,7 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Paid", "Refunded"],
       default: "Pending",
     },
-    totalAmount: Number,
+    totalAmount: { type: Number, required: true },
     status: {
       type: String,
       enum: ["Processing", "Shipped", "Delivered", "Cancelled"],

@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axios";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
 
 function AdminContacts() {
   const [contacts, setContacts] = useState([]);
@@ -8,6 +11,25 @@ function AdminContacts() {
 
   useEffect(() => {
     fetchContacts();
+
+    // Real-time new contact message
+    socket.on("newContactMessage", (newContact) => {
+      setContacts((prev) => [newContact, ...prev]);
+    });
+
+    // Real-time reply update
+    socket.on("contactReplied", (updatedContact) => {
+      setContacts((prev) =>
+        prev.map((c) =>
+          c._id === updatedContact._id ? updatedContact : c
+        )
+      );
+    });
+
+    return () => {
+      socket.off("newContactMessage");
+      socket.off("contactReplied");
+    };
   }, []);
 
   const fetchContacts = async () => {
@@ -22,12 +44,11 @@ function AdminContacts() {
 
     setReplyText("");
     setSelected(null);
-    fetchContacts();
   };
 
   const handleDelete = async (id) => {
     await api.delete(`/contact/${id}`);
-    fetchContacts();
+    setContacts((prev) => prev.filter((c) => c._id !== id));
   };
 
   return (

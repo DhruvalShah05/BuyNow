@@ -11,11 +11,12 @@ import { adminOnly } from "../middleware/adminMiddleware.js";
 
 const router = express.Router();
 
+// USER
 router.post("/", protect, createOrder);
 router.get("/my", protect, getMyOrders);
 router.put("/cancel/:id", protect, cancelOrder);
 
-
+// ADMIN
 router.get("/", protect, adminOnly, getAllOrders);
 router.put("/:id", protect, adminOnly, updateOrderStatus);
 

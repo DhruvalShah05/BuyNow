@@ -1,5 +1,5 @@
 import Contact from "../models/Contact.js";
-
+import { io } from "../server.js";
 
 
 // CREATE MESSAGE (Login Optional)
@@ -20,19 +20,23 @@ export const createContact = async (req, res) => {
       message,
     });
 
+    // REALTIME EVENT
+    io.emit("newContactMessage", contact);
+
     res.status(201).json({
       message: "Message sent successfully",
       contact,
     });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 
- 
+
 // ADMIN - GET ALL MESSAGES
- 
+
 export const getContacts = async (req, res) => {
   try {
     const contacts = await Contact.find()
@@ -40,15 +44,16 @@ export const getContacts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(contacts);
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 
- 
+
 // ADMIN - REPLY TO MESSAGE
- 
+
 export const replyToContact = async (req, res) => {
   try {
     const { reply } = req.body;
@@ -65,37 +70,44 @@ export const replyToContact = async (req, res) => {
 
     await contact.save();
 
+    // REALTIME EVENT
+    io.emit("contactReplied", contact);
+
     res.json({
       message: "Reply sent successfully",
       contact,
     });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 
- 
+
 // USER - GET MY MESSAGES
- 
+
 export const getMyContacts = async (req, res) => {
   try {
+
     const contacts = await Contact.find({
       user: req.user._id,
     }).sort({ createdAt: -1 });
 
     res.json(contacts);
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 
- 
+
 // ADMIN - DELETE MESSAGE
- 
+
 export const deleteContact = async (req, res) => {
   try {
+
     const contact = await Contact.findById(req.params.id);
 
     if (!contact) {
@@ -105,6 +117,7 @@ export const deleteContact = async (req, res) => {
     await contact.deleteOne();
 
     res.json({ message: "Message deleted successfully" });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
